@@ -1,0 +1,318 @@
+# Monorepo Setup with Isolated Deployment
+
+This document explains how to set up and manage the Vive Real Estate project as a monorepo while maintaining isolated deployment capabilities.
+
+## Project Structure
+
+```
+viverealestate/
+├── frontend/           # Next.js frontend application
+├── backend/           # NestJS backend application
+├── docs/             # Project documentation
+├── package.json      # Root package.json for workspace management
+├── docker-compose.yml # Docker compose for all deployment scenarios
+└── .env              # Root environment variables
+```
+
+## Development Setup
+
+### 1. Install Dependencies
+
+```bash
+# Install root dependencies
+npm install
+
+# Install workspace dependencies
+npm install --workspaces
+```
+
+### 2. Development Commands
+
+```bash
+# Run both frontend and backend in development mode
+npm run dev
+
+# Run frontend only
+npm run dev:frontend
+
+# Run backend only
+npm run dev:backend
+
+# Build all packages
+npm run build
+
+# Run tests
+npm run test
+
+# Format code
+npm run format
+```
+
+## Docker Deployment Options
+
+### 1. Development Environment
+
+```bash
+# Start all services
+docker-compose --profile dev up -d
+
+# Start only frontend
+docker-compose --profile frontend up -d
+
+# Start only backend (includes database)
+docker-compose --profile backend up -d
+```
+
+### 2. Production Deployment
+
+#### Isolated Frontend Deployment
+```bash
+# Deploy frontend only
+docker-compose --profile frontend up -d
+```
+
+#### Isolated Backend Deployment
+```bash
+# Deploy backend only (includes database)
+docker-compose --profile backend up -d
+```
+
+## Environment Configuration
+
+### 1. Root Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+# Frontend
+NEXT_PUBLIC_API_URL=http://localhost:3001
+BACKEND_URL=http://localhost:3001
+
+# Backend
+DATABASE_URL=postgresql://postgres:postgres@db:5432/vive_realestate
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=24h
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+CORS_ORIGIN=http://localhost:3000
+
+# Database
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=vive_realestate
+```
+
+## Docker Compose Profiles
+
+The root `docker-compose.yml` uses profiles to support different deployment scenarios:
+
+1. **dev**: Development environment with all services
+2. **frontend**: Frontend service only
+3. **backend**: Backend and database services
+
+### Usage Examples
+
+```bash
+# Development
+docker-compose --profile dev up -d
+
+# Frontend only
+docker-compose --profile frontend up -d
+
+# Backend only
+docker-compose --profile backend up -d
+```
+
+## Shared Resources
+
+### 1. Shared Types
+
+Create a `shared` package for common types and utilities:
+
+```bash
+mkdir shared
+cd shared
+npm init -y
+```
+
+Add TypeScript configuration:
+```json
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./dist",
+    "strict": true
+  }
+}
+```
+
+### 2. Shared Configuration
+
+Create a `config` directory for shared configuration:
+
+```bash
+mkdir config
+```
+
+Add common configuration files:
+- `config/eslint.js`
+- `config/prettier.js`
+- `config/tsconfig.base.json`
+
+## CI/CD Setup
+
+### 1. GitHub Actions Workflow
+
+Create `.github/workflows/ci.yml`:
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm run test
+      - run: npm run build
+
+  deploy-frontend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy Frontend
+        run: docker-compose --profile frontend up -d
+
+  deploy-backend:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy Backend
+        run: docker-compose --profile backend up -d
+```
+
+## Development Workflow
+
+### 1. Starting Development
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd viverealestate
+
+# Install dependencies
+npm install
+
+# Start development servers
+npm run dev
+```
+
+### 2. Making Changes
+
+1. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+
+2. Make changes in the relevant workspace:
+   - Frontend changes in `frontend/`
+   - Backend changes in `backend/`
+   - Shared changes in `shared/`
+
+3. Commit changes:
+   ```bash
+   git add .
+   git commit -m "feat: your feature description"
+   ```
+
+4. Push changes:
+   ```bash
+   git push origin feature/your-feature
+   ```
+
+### 3. Testing Changes
+
+```bash
+# Run tests
+npm run test
+
+# Run linting
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Deployment Workflow
+
+### 1. Frontend Deployment
+
+```bash
+# Build frontend
+npm run build --workspace=frontend
+
+# Deploy using Docker
+docker-compose --profile frontend up -d
+```
+
+### 2. Backend Deployment
+
+```bash
+# Build backend
+npm run build --workspace=backend
+
+# Deploy using Docker
+docker-compose --profile backend up -d
+```
+
+## Monitoring and Maintenance
+
+### 1. Logs
+
+```bash
+# View all logs
+docker-compose logs -f
+
+# View specific service logs
+docker-compose logs -f frontend
+docker-compose logs -f backend
+```
+
+### 2. Updates
+
+```bash
+# Update dependencies
+npm update
+
+# Update specific workspace
+npm update --workspace=frontend
+npm update --workspace=backend
+```
+
+### 3. Cleanup
+
+```bash
+# Remove unused containers and volumes
+docker-compose down -v
+
+# Clean up Docker resources
+docker system prune
+``` 

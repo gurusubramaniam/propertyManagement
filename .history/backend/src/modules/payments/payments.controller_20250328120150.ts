@@ -1,0 +1,108 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Param,
+} from '@nestjs/common';
+import { PaymentsService } from './payments.service';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { User } from '../auth/decorators/user.decorator';
+import { UserEntity } from '../users/entities/user.entity';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { PaymentInfoResponseDto } from './dto/payment-info.response.dto';
+import { PaymentHistoryResponseDto } from './dto/payment-history.response.dto';
+import { CreatePaymentResponseDto } from './dto/create-payment.response.dto';
+
+@ApiTags('Tenant Payments')
+@Controller('payments')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
+export class PaymentsController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Get('tenant/payment-info')
+  @ApiOperation({ summary: 'Get tenant payment information' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the current amount due and property information',
+    type: PaymentInfoResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - User is not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a tenant',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Tenant or property not found',
+  })
+  async getTenantPaymentInfo(@User() user: UserEntity) {
+    return this.paymentsService.getTenantPaymentInfo(user.id);
+  }
+
+  @Post('tenant/payment')
+  @ApiOperation({ summary: 'Create a new payment' })
+  @ApiResponse({
+    status: 201,
+    description: 'Payment has been successfully created',
+    type: CreatePaymentResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad Request - Invalid payment data',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - User is not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a tenant',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Not Found - Tenant or property not found',
+  })
+  async createPayment(
+    @User() user: UserEntity,
+    @Body() createPaymentDto: CreatePaymentDto,
+  ) {
+    return this.paymentsService.createPayment(user.id, createPaymentDto);
+  }
+
+  @Get('tenant/payment-history')
+  @ApiOperation({ summary: 'Get tenant payment history' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the list of all payments made by the tenant',
+    type: PaymentHistoryResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - User is not authenticated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - User is not a tenant',
+  })
+  async getTenantPaymentHistory(@User() user: UserEntity) {
+    return this.paymentsService.getTenantPaymentHistory(user.id);
+  }
+
+  @Get('tenant/payment/:id')
+  async getTenantPayment(@User() user: UserEntity, @Param('id') id: string) {
+    return this.paymentsService.getTenantPayment(user.id, id);
+  }
+}

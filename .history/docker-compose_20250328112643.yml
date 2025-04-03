@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:3001}
+      - BACKEND_URL=${BACKEND_URL:-http://backend:3001}
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - vive-network
+    profiles:
+      - frontend
+      - dev
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:postgres@db:5432/vive_realestate}
+      - JWT_SECRET=${JWT_SECRET:-your_jwt_secret}
+      - JWT_EXPIRATION=${JWT_EXPIRATION:-24h}
+      - SMTP_HOST=${SMTP_HOST:-smtp.example.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-your_smtp_user}
+      - SMTP_PASS=${SMTP_PASS:-your_smtp_password}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    networks:
+      - vive-network
+    profiles:
+      - backend
+      - dev
+
+  db:
+    image: postgres:14-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-vive_realestate}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - vive-network
+    profiles:
+      - backend
+      - dev
+
+volumes:
+  postgres_data:
+
+networks:
+  vive-network:
+    driver: bridge 

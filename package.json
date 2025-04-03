@@ -1,0 +1,47 @@
+{
+    "name": "vive-realestate",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "scripts": {
+        "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
+        "dev:frontend": "npm run dev --workspace=frontend",
+        "dev:backend": "npm run start:dev --workspace=backend",
+        "build": "npm run build:frontend && npm run build:backend",
+        "build:frontend": "npm run build --workspace=frontend",
+        "build:backend": "npm run build --workspace=backend",
+        "start": "concurrently \"npm run start:frontend\" \"npm run start:backend\"",
+        "start:frontend": "npm run start --workspace=frontend",
+        "start:backend": "npm run start:prod --workspace=backend",
+        "test": "npm run test:frontend && npm run test:backend",
+        "test:frontend": "npm run test --workspace=frontend",
+        "test:backend": "npm run test --workspace=backend",
+        "lint": "npm run lint:frontend && npm run lint:backend",
+        "lint:frontend": "npm run lint --workspace=frontend",
+        "lint:backend": "npm run lint --workspace=backend",
+        "format": "npm run format:frontend && npm run format:backend",
+        "format:frontend": "npm run format --workspace=frontend",
+        "format:backend": "npm run format --workspace=backend",
+        "version:frontend": "npm version patch --workspace=frontend",
+        "version:backend": "npm version patch --workspace=backend",
+        "version:frontend:minor": "npm version minor --workspace=frontend",
+        "version:backend:minor": "npm version minor --workspace=backend",
+        "version:frontend:major": "npm version major --workspace=frontend",
+        "version:backend:major": "npm version major --workspace=backend",
+        "release:frontend": "npm run build:frontend && npm run version:frontend",
+        "release:backend": "npm run build:backend && npm run version:backend",
+        "release:frontend:minor": "npm run build:frontend && npm run version:frontend:minor",
+        "release:backend:minor": "npm run build:backend && npm run version:backend:minor",
+        "release:frontend:major": "npm run build:frontend && npm run version:frontend:major",
+        "release:backend:major": "npm run build:backend && npm run version:backend:major"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.21",
+        "concurrently": "^8.2.2",
+        "postcss": "^8.5.3",
+        "tailwindcss": "^4.0.17"
+    }
+}
